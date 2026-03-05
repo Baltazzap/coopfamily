@@ -138,7 +138,7 @@ async def send_welcome(ctx):
     """
     embed = discord.Embed(
         title="🧡 Welcome to CoopFamily",
-        description="*"United We Stand, Divided We Fall"* — Our motto in Washington.",
+        description='"United We Stand, Divided We Fall" — Our motto in Washington.',
         color=0xFF6B35
     )
     embed.add_field(
@@ -197,3 +197,4 @@ async def welcome_error(ctx, error):
 
 # --- ЗАПУСК ---
 bot.run(TOKEN)
+
