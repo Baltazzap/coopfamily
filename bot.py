@@ -7,7 +7,8 @@ TOKEN = 'YOUR_BOT_TOKEN'  # ⚠️ Вставьте токен вашего бо
 INTENTS = discord.Intents.default()
 INTENTS.message_content = True
 
-bot = commands.Bot(command_prefix='!', intents=INTENTS)
+# Отключаем стандартную команду help, чтобы использовать свою
+bot = commands.Bot(command_prefix='!', intents=INTENTS, help_command=None)
 
 # --- ЦВЕТА РОЛЕЙ (HEX) ---
 ROLE_COLORS = {
@@ -164,13 +165,29 @@ async def send_welcome(ctx):
 @bot.command(name='help')
 async def help_command(ctx):
     """
-    ❓ Shows list of available commands.
+    ❓ Shows list of available commands (Custom Help).
     """
-    embed = discord.Embed(title="🤖 CoopFamily Bot Commands", color=0x3498DB)
-    embed.add_field(name="!setup", value="Setup server (roles + channels). Admin only.", inline=False)
-    embed.add_field(name="!welcome", value="Send welcome message.", inline=False)
-    embed.add_field(name="!help", value="Show this help message.", inline=False)
-    embed.set_footer(text="CoopFamily Bot v1.0")
+    embed = discord.Embed(
+        title="🤖 CoopFamily Bot Commands",
+        description="Here are all available commands for the server.",
+        color=0x3498DB
+    )
+    embed.add_field(
+        name="🛠️ Server Setup",
+        value="`!setup` - Create all roles and channels (Admin only)",
+        inline=False
+    )
+    embed.add_field(
+        name="📢 Messages",
+        value="`!welcome` - Send welcome message (Mod+)\n`!help` - Show this help menu",
+        inline=False
+    )
+    embed.add_field(
+        name="🏓 Utilities",
+        value="`!ping` - Check bot latency",
+        inline=False
+    )
+    embed.set_footer(text="CoopFamily Bot v1.0 • Type !command for more info")
     await ctx.send(embed=embed)
 
 @bot.command(name='ping')
@@ -179,7 +196,11 @@ async def ping_command(ctx):
     🏓 Check bot latency.
     """
     latency = round(bot.latency * 1000)
-    embed = discord.Embed(title="🏓 Pong!", description=f"Bot latency: **{latency}ms**", color=0x2ECC71)
+    embed = discord.Embed(
+        title="🏓 Pong!",
+        description=f"Bot latency: **{latency}ms**",
+        color=0x2ECC71
+    )
     await ctx.send(embed=embed)
 
 # --- ОБРАБОТКА ОШИБОК ---
@@ -195,6 +216,19 @@ async def welcome_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("❌ You need **Manage Messages** permissions to use this command!")
 
-# --- ЗАПУСК ---
-bot.run(TOKEN)
+@help_command.error
+async def help_error(ctx, error):
+    await ctx.send(f"❌ Error: {error}")
 
+@ping_command.error
+async def ping_error(ctx, error):
+    await ctx.send(f"❌ Error: {error}")
+
+# --- ЗАПУСК ---
+if __name__ == "__main__":
+    try:
+        bot.run(TOKEN)
+    except discord.LoginFailure:
+        print("❌ Invalid token! Please check your bot token.")
+    except Exception as e:
+        print(f"❌ Error starting bot: {e}")
