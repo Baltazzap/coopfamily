@@ -204,6 +204,8 @@ async def ping_command(ctx):
     await ctx.send(embed=embed)
 
 # --- ОБРАБОТКА ОШИБОК ---
+# ⚠️ Важно: указываем имя ФУНКЦИИ, а не имя команды!
+
 @setup_server.error
 async def setup_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
@@ -211,10 +213,12 @@ async def setup_error(ctx, error):
     else:
         await ctx.send(f"❌ Error: {error}")
 
-@welcome.error
+@send_welcome.error
 async def welcome_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("❌ You need **Manage Messages** permissions to use this command!")
+    else:
+        await ctx.send(f"❌ Error: {error}")
 
 @help_command.error
 async def help_error(ctx, error):
