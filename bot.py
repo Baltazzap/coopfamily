@@ -1,9 +1,19 @@
 import discord
 from discord.ext import commands
 from discord import Permissions
+import os
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения из .env файла
+load_dotenv()
 
 # --- НАСТРОЙКИ ---
-TOKEN = 'YOUR_BOT_TOKEN'  # ⚠️ Вставьте токен вашего бота
+TOKEN = os.getenv('DISCORD_TOKEN')  # ⚠️ Токен берётся из .env
+if not TOKEN:
+    print("❌ Error: DISCORD_TOKEN not found in environment variables!")
+    print("💡 Please create a .env file with DISCORD_TOKEN=your_token_here")
+    exit(1)
+
 INTENTS = discord.Intents.default()
 INTENTS.message_content = True
 
@@ -204,8 +214,6 @@ async def ping_command(ctx):
     await ctx.send(embed=embed)
 
 # --- ОБРАБОТКА ОШИБОК ---
-# ⚠️ Важно: указываем имя ФУНКЦИИ, а не имя команды!
-
 @setup_server.error
 async def setup_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
@@ -231,8 +239,9 @@ async def ping_error(ctx, error):
 # --- ЗАПУСК ---
 if __name__ == "__main__":
     try:
+        print("🚀 Starting CoopFamily Bot...")
         bot.run(TOKEN)
     except discord.LoginFailure:
-        print("❌ Invalid token! Please check your bot token.")
+        print("❌ Invalid token! Please check your DISCORD_TOKEN.")
     except Exception as e:
         print(f"❌ Error starting bot: {e}")
