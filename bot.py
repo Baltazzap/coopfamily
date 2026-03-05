@@ -44,7 +44,7 @@ SELF_ASSIGNABLE_ROLES = {
     "Ping-LFG": {"id": 1479178343885836562, "emoji": "🔍", "label": "Ping LFG", "desc": "Get notified about group finding"}
 }
 
-# --- ЦВЕТА РОЛЕЙ (для создания) ---
+# --- ЦВЕТА РОЛЕЙ ---
 ROLE_COLORS = {
     "Leader": 0xFF6B35,
     "Officer": 0xFFD700,
@@ -138,24 +138,15 @@ class RoleButton(Button):
         role = guild.get_role(self.role_id)
         
         if not role:
-            await interaction.response.send_message(
-                f"❌ Role not found!",
-                ephemeral=True
-            )
+            await interaction.response.send_message("❌ Role not found!", ephemeral=True)
             return
         
         if role in member.roles:
             await member.remove_roles(role)
-            await interaction.response.send_message(
-                f"❌ Removed <@&{self.role_id}>!",
-                ephemeral=True
-            )
+            await interaction.response.send_message(f"❌ Removed <@&{self.role_id}>!", ephemeral=True)
         else:
             await member.add_roles(role)
-            await interaction.response.send_message(
-                f"✅ Added <@&{self.role_id}>!",
-                ephemeral=True
-            )
+            await interaction.response.send_message(f"✅ Added <@&{self.role_id}>!", ephemeral=True)
 
 # --- СОБЫТИЯ ---
 @bot.event
@@ -167,15 +158,11 @@ async def on_ready():
 
 @bot.event
 async def on_member_join(member):
-    """
-    🎉 Авто-выдача роли при входе
-    """
     try:
         auto_role = member.guild.get_role(AUTO_ROLE_ID)
         if auto_role:
             await member.add_roles(auto_role)
             print(f"✅ Auto-role assigned to {member.name}")
-            
             try:
                 await member.send(
                     f"🧡 **Welcome to CoopFamily, {member.name}!**\n\n"
@@ -212,14 +199,12 @@ async def setup_server(ctx):
     for cat_name, channels in CATEGORIES.items():
         try:
             category = await guild.create_category_channel(cat_name)
-            
             if "STAFF" in cat_name:
                 await category.set_permissions(guild.default_role, view_channel=False)
                 if "Leader" in created_roles:
                     await category.set_permissions(created_roles["Leader"], view_channel=True)
                 if "Officer" in created_roles:
                     await category.set_permissions(created_roles["Officer"], view_channel=True)
-
             for ch_name, ch_type in channels:
                 if ch_type == "text":
                     await guild.create_text_channel(ch_name, category=category)
@@ -253,62 +238,114 @@ async def send_welcome(ctx):
         value="[📖 Official Wiki](https://division.fandom.com)\n[🧮 Build Calculator](https://d2calc.com)\n[🎮 Clan Name: CoopFamily]",
         inline=False
     )
-    embed.set_footer(text="CoopFamily • SHD Network Active • Est. 2026")
+    embed.set_footer(text="CoopFamily • SHD Network Active • Est. 2026", icon_url="https://i.imgur.com/sAnFJ4c.png")
     embed.timestamp = discord.utils.utcnow()
+    await ctx.send(embed=embed)
+
+@bot.command(name='rules')
+@commands.has_permissions(manage_messages=True)
+async def send_rules(ctx):
+    """
+    📜 Sends beautiful rules embed for the clan.
+    """
+    embed = discord.Embed(
+        title="📜 CoopFamily Server Rules",
+        description='"With great power comes great responsibility" — Follow these rules to keep our community safe and fun!',
+        color=0xFF6B35  # SHD Orange
+    )
+    
+    # 🛡️ General Rules
+    embed.add_field(
+        name="🛡️ General Conduct",
+        value="1️⃣ **Be Respectful** — No harassment, hate speech, or discrimination\n"
+              "2️⃣ **No Toxicity** — We're here to have fun, not to argue\n"
+              "3️⃣ **English Only** in public channels (use DMs for other languages)\n"
+              "4️⃣ **No Spam** — Avoid excessive pings, caps, or repeated messages\n"
+              "5️⃣ **No NSFW Content** — Keep it family-friendly",
+        inline=False
+    )
+    
+    # 🎮 Game-Specific Rules
+    embed.add_field(
+        name="🎮 Division 2 Rules",
+        value="6️⃣ **PvE Focus** — This is a PvE community; keep PvP discussions minimal\n"
+              "7️⃣ **No Cheating/Glitching** — Report bugs, don't exploit them\n"
+              "8️⃣ **Share Loot Fairly** — Be generous with group drops\n"
+              "9️⃣ **Communicate in Voice** — Mic required for raids and coordinated runs\n"
+              "🔟 **Help New Agents** — We all started somewhere!",
+        inline=False
+    )
+    
+    # 🔊 Voice & LFG Rules
+    embed.add_field(
+        name="🔊 Voice & LFG Etiquette",
+        value="• Use appropriate voice channels for your activity\n"
+              "• Keep raid channels clear for tactical comms only\n"
+              "• In LFG posts, specify: `[Platform] [Activity] [Requirements]`\n"
+              "• Don't leave groups mid-mission without notice\n"
+              "• Respect the Raid Leader's calls during operations",
+        inline=False
+    )
+    
+    # ⚠️ Consequences
+    embed.add_field(
+        name="⚠️ Rule Violations",
+        value="🟡 **Warning** — Minor first-time offenses\n"
+              "🟠 **Mute** — Repeated disruptions or minor toxicity\n"
+              "🔴 **Kick/Ban** — Severe violations, cheating, or harassment\n\n"
+              "*All decisions are made by @Officer+ staff. Appeals via ticket.*",
+        inline=False
+    )
+    
+    # ✅ Footer with image
+    embed.set_footer(
+        text="CoopFamily • By joining, you agree to these rules",
+        icon_url="https://i.imgur.com/sAnFJ4c.png"
+    )
+    embed.timestamp = discord.utils.utcnow()
+    
     await ctx.send(embed=embed)
 
 @bot.command(name='roles')
 @commands.has_permissions(manage_messages=True)
 async def send_roles(ctx):
-    """
-    🎁 Sends beautiful role selection embed with pings and buttons.
-    """
     embed = discord.Embed(
         title="🎁 Select Your Roles",
-        description="Click the buttons below to get your roles! Click again to remove them.\n\n"
-                    "**Role Pings:**",
+        description="Click the buttons below to get your roles! Click again to remove them.\n\n**Role Pings:**",
         color=0x3498DB
     )
     
-    # 🎮 Platforms Section with pings
     platforms_value = ""
     for key in ["PC", "PlayStation", "Xbox"]:
         role_data = SELF_ASSIGNABLE_ROLES[key]
         platforms_value += f"{role_data['emoji']} <@&{role_data['id']}> — {role_data['desc']}\n"
     embed.add_field(name="🎮 Platforms", value=platforms_value, inline=False)
     
-    # ⚔️ Playstyle Section with pings
     playstyle_value = ""
     for key in ["PvE-Hardcore", "PvE-Casual", "BattlePass-Grind"]:
         role_data = SELF_ASSIGNABLE_ROLES[key]
         playstyle_value += f"{role_data['emoji']} <@&{role_data['id']}> — {role_data['desc']}\n"
     embed.add_field(name="⚔️ Playstyle", value=playstyle_value, inline=False)
     
-    # 🔔 Notifications Section with pings
     notifications_value = ""
     for key in ["Ping-Events", "Ping-LFG"]:
         role_data = SELF_ASSIGNABLE_ROLES[key]
         notifications_value += f"{role_data['emoji']} <@&{role_data['id']}> — {role_data['desc']}\n"
     embed.add_field(name="🔔 Notifications", value=notifications_value, inline=False)
     
-    # Restricted roles note
     embed.add_field(
         name="⚠️ Restricted Roles",
         value="`Leader` `Officer` `Veteran` — Assigned by administrators only",
         inline=False
     )
     
-    # 🖼️ Footer with image
-    embed.set_footer(
-        text="CoopFamily • Click buttons to self-assign roles",
-        icon_url="https://i.imgur.com/sAnFJ4c.png"
-    )
-    
+    embed.set_footer(text="CoopFamily • Click buttons to self-assign roles", icon_url="https://i.imgur.com/sAnFJ4c.png")
     embed.timestamp = discord.utils.utcnow()
     
     await ctx.send(embed=embed, view=RoleSelectView())
 
 @bot.command(name='help')
+@commands.has_permissions(manage_messages=True)
 async def help_command(ctx):
     embed = discord.Embed(
         title="🤖 CoopFamily Bot Commands",
@@ -316,19 +353,19 @@ async def help_command(ctx):
         color=0x3498DB
     )
     embed.add_field(name="🛠️ Server Setup", value="`!setup` — Create roles & channels (Admin)", inline=False)
-    embed.add_field(name="📢 Messages", value="`!welcome` — Send welcome message\n`!roles` — Send role panel\n`!help` — Show this menu", inline=False)
+    embed.add_field(
+        name="📢 Messages", 
+        value="`!welcome` — Send welcome message\n`!rules` — Send server rules\n`!roles` — Send role panel\n`!help` — Show this menu",
+        inline=False
+    )
     embed.add_field(name="🏓 Utilities", value="`!ping` — Check bot latency", inline=False)
-    embed.set_footer(text="CoopFamily Bot v1.2", icon_url="https://i.imgur.com/sAnFJ4c.png")
+    embed.set_footer(text="CoopFamily Bot v1.3", icon_url="https://i.imgur.com/sAnFJ4c.png")
     await ctx.send(embed=embed)
 
 @bot.command(name='ping')
 async def ping_command(ctx):
     latency = round(bot.latency * 1000)
-    embed = discord.Embed(
-        title="🏓 Pong!",
-        description=f"Bot latency: **{latency}ms**",
-        color=0x2ECC71
-    )
+    embed = discord.Embed(title="🏓 Pong!", description=f"Bot latency: **{latency}ms**", color=0x2ECC71)
     embed.set_footer(icon_url="https://i.imgur.com/sAnFJ4c.png")
     await ctx.send(embed=embed)
 
@@ -341,6 +378,7 @@ async def setup_error(ctx, error):
         await ctx.send(f"❌ Error: {error}")
 
 @send_welcome.error
+@send_rules.error
 @send_roles.error
 async def perm_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
@@ -351,7 +389,7 @@ async def perm_error(ctx, error):
 # --- ЗАПУСК ---
 if __name__ == "__main__":
     try:
-        print("🚀 Starting CoopFamily Bot v1.2...")
+        print("🚀 Starting CoopFamily Bot v1.3...")
         bot.run(TOKEN)
     except discord.LoginFailure:
         print("❌ Invalid token! Check DISCORD_TOKEN.")
