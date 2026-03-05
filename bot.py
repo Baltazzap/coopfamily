@@ -3,9 +3,9 @@ from discord.ext import commands
 from discord import Permissions
 
 # --- НАСТРОЙКИ ---
-TOKEN = 'YOUR_BOT_TOKEN'  # Вставьте токен вашего бота
+TOKEN = 'YOUR_BOT_TOKEN'  # ⚠️ Вставьте токен вашего бота
 INTENTS = discord.Intents.default()
-INTENTS.message_content = True  # Нужно для чтения команд
+INTENTS.message_content = True
 
 bot = commands.Bot(command_prefix='!', intents=INTENTS)
 
@@ -75,8 +75,9 @@ CATEGORIES = {
 # --- СОБЫТИЯ ---
 @bot.event
 async def on_ready():
-    print(f'✅ Бот запущен: {bot.user.name}')
-    print(f'🔗 ID сервера: {bot.guilds[0].id if bot.guilds else "N/A"}')
+    print(f'✅ Bot Online: {bot.user.name}')
+    print(f'🔗 Server ID: {bot.guilds[0].id if bot.guilds else "N/A"}')
+    await bot.change_presence(activity=discord.Game(name="The Division 2 | !help"))
 
 # --- КОМАНДЫ ---
 
@@ -84,11 +85,11 @@ async def on_ready():
 @commands.has_permissions(administrator=True)
 async def setup_server(ctx):
     """
-    🛠️ Создает все роли, категории и каналы для сервера CoopFamily.
-    Требует прав администратора.
+    🛠️ Creates all roles, categories, and channels for CoopFamily server.
+    Requires Administrator permissions.
     """
     guild = ctx.guild
-    await ctx.send("🚀 **Запуск настройки сервера CoopFamily...** Это может занять минуту.")
+    await ctx.send("🚀 **Starting CoopFamily Server Setup...** This may take a minute.")
 
     # 1. Создание ролей
     created_roles = {}
@@ -96,16 +97,15 @@ async def setup_server(ctx):
         try:
             role = await guild.create_role(name=role_name, color=discord.Color(color), reason="CoopFamily Setup")
             created_roles[role_name] = role
-            print(f"✅ Роль создана: {role_name}")
+            print(f"✅ Role created: {role_name}")
         except Exception as e:
-            print(f"❌ Ошибка создания роли {role_name}: {e}")
+            print(f"❌ Error creating role {role_name}: {e}")
     
-    await ctx.send(f"🎨 **Создано {len(created_roles)} ролей.**")
+    await ctx.send(f"🎨 **Created {len(created_roles)} roles.**")
 
     # 2. Создание категорий и каналов
     for cat_name, channels in CATEGORIES.items():
         try:
-            # Создаем категорию
             category = await guild.create_category_channel(cat_name)
             
             # Скрываем категорию Staff от всех, кроме админов
@@ -123,12 +123,12 @@ async def setup_server(ctx):
                 elif ch_type == "voice":
                     await guild.create_voice_channel(ch_name, category=category)
             
-            print(f"✅ Категория создана: {cat_name}")
+            print(f"✅ Category created: {cat_name}")
         except Exception as e:
-            print(f"❌ Ошибка категории {cat_name}: {e}")
+            print(f"❌ Error in category {cat_name}: {e}")
 
-    await ctx.send("✅ **Настройка сервера завершена!** Проверьте каналы и роли.")
-    await ctx.send("💡 **Совет:** Используйте команду `!welcome` в канале #welcome для отправки приветствия.")
+    await ctx.send("✅ **Server Setup Complete!** Check your channels and roles.")
+    await ctx.send("💡 **Tip:** Use `!welcome` in #👋・welcome to send the welcome message.")
 
 @bot.command(name='welcome')
 @commands.has_permissions(manage_messages=True)
@@ -139,7 +139,7 @@ async def send_welcome(ctx):
     embed = discord.Embed(
         title="🧡 Welcome to CoopFamily",
         description="*"United We Stand, Divided We Fall"* — Our motto in Washington.",
-        color=0xFF6B35  # SHD Orange
+        color=0xFF6B35
     )
     embed.add_field(
         name="🎯 What to Expect?",
@@ -164,13 +164,36 @@ async def send_welcome(ctx):
 @bot.command(name='help')
 async def help_command(ctx):
     """
-    ❓ Показывает список доступных команд.
+    ❓ Shows list of available commands.
     """
     embed = discord.Embed(title="🤖 CoopFamily Bot Commands", color=0x3498DB)
-    embed.add_field(name="!setup", value="Настроить сервер (роли + каналы). Только Admin.", inline=False)
-    embed.add_field(name="!welcome", value="Отправить приветственное сообщение.", inline=False)
-    embed.add_field(name="!help", value="Показать это сообщение.", inline=False)
+    embed.add_field(name="!setup", value="Setup server (roles + channels). Admin only.", inline=False)
+    embed.add_field(name="!welcome", value="Send welcome message.", inline=False)
+    embed.add_field(name="!help", value="Show this help message.", inline=False)
+    embed.set_footer(text="CoopFamily Bot v1.0")
     await ctx.send(embed=embed)
+
+@bot.command(name='ping')
+async def ping_command(ctx):
+    """
+    🏓 Check bot latency.
+    """
+    latency = round(bot.latency * 1000)
+    embed = discord.Embed(title="🏓 Pong!", description=f"Bot latency: **{latency}ms**", color=0x2ECC71)
+    await ctx.send(embed=embed)
+
+# --- ОБРАБОТКА ОШИБОК ---
+@setup_server.error
+async def setup_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("❌ You need **Administrator** permissions to use this command!")
+    else:
+        await ctx.send(f"❌ Error: {error}")
+
+@welcome.error
+async def welcome_error(ctx, error):
+    if isinstance(error, commands.MissingPermissions):
+        await ctx.send("❌ You need **Manage Messages** permissions to use this command!")
 
 # --- ЗАПУСК ---
 bot.run(TOKEN)
