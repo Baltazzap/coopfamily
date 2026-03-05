@@ -20,6 +20,14 @@ INTENTS.message_content = True
 # Отключаем стандартную команду help, чтобы использовать свою
 bot = commands.Bot(command_prefix='!', intents=INTENTS, help_command=None)
 
+# --- ID КАНАЛОВ (для кликабельных ссылок) ---
+CHANNEL_IDS = {
+    "rules": "1479178350823211068",
+    "roles": "1479178355701186695",
+    "general": "1479178361535201513",
+    "lfg-pve": "1479178383601434675"
+}
+
 # --- ЦВЕТА РОЛЕЙ (HEX) ---
 ROLE_COLORS = {
     "Leader": 0xFF6B35,        # SHD Orange
@@ -159,7 +167,7 @@ async def send_welcome(ctx):
     )
     embed.add_field(
         name="📋 First Steps:",
-        value="1️⃣ Read rules in <#📜・rules>\n2️⃣ Pick your platform in <#🎁・roles>\n3️⃣ Introduce yourself in <#💬・general>\n4️⃣ Find a group in <#🔍・lfg-pve>",
+        value=f"1️⃣ Read rules in <#{CHANNEL_IDS['rules']}>\n2️⃣ Pick your platform in <#{CHANNEL_IDS['roles']}>\n3️⃣ Introduce yourself in <#{CHANNEL_IDS['general']}>\n4️⃣ Find a group in <#{CHANNEL_IDS['lfg-pve']}>",
         inline=False
     )
     embed.add_field(
