@@ -176,10 +176,10 @@ class RoleButton(Button):
             await interaction.response.send_message(f"✅ Added <@&{self.role_id}>!", ephemeral=True)
 
 # ============================================
-# ✅ КЛАСС ДЛЯ КНОПОК ВИКТОРИНЫ
+# ✅ КЛАСС ДЛЯ КНОПОК ВИКТОРИНЫ (ИСПРАВЛЕНО)
 # ============================================
 class TriviaView(View):
-    def __init__(self, correct_answer: int, question_ dict):
+    def __init__(self, correct_answer: int, question_data: dict):  # ✅ Исправлено: question_data: dict
         super().__init__(timeout=30)
         self.correct_answer = correct_answer
         self.question_data = question_data
