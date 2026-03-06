@@ -5,7 +5,7 @@ from discord.ui import Button, View
 import os
 from dotenv import load_dotenv
 import random
-from datetime import datetime, timedelta
+import asyncio
 
 # Загрузка переменных окружения из .env файла
 load_dotenv()
@@ -78,9 +78,6 @@ EXOTICS_DB = [
 
 # --- БАЗА ДАННЫХ МЕМОВ ---
 MEME_URLS = [
-    "https://i.redd.it/division2meme1.jpg",
-    "https://i.redd.it/division2meme2.jpg",
-    "https://i.redd.it/division2meme3.jpg",
     "https://i.imgur.com/sAnFJ4c.png",
     "https://i.imgur.com/DivisionMeme1.png",
     "https://i.imgur.com/DivisionMeme2.png"
@@ -108,103 +105,28 @@ FORBIDDEN_WORDS = [
 
 # --- ВОПРОСЫ ДЛЯ ВИКТОРИНЫ ---
 TRIVIA_QUESTIONS = [
-    {
-        "question": "What is the name of the AI system used by Division agents?",
-        "options": ["ISAC", "JTF", "SHD", "BTSU"],
-        "answer": 0
-    },
-    {
-        "question": "Which faction controls the White House at the start of Division 2?",
-        "options": ["Hyenas", "Outcasts", "True Sons", "Black Tusk"],
-        "answer": 2
-    },
-    {
-        "question": "What is the max Gear Score in Warlords of New York?",
-        "options": ["450", "500", "515", "600"],
-        "answer": 2
-    },
-    {
-        "question": "Which exotic SMG has the 'Obliterate' talent?",
-        "options": ["Chatterbox", "Lady Death", "Tommy Gun", "Vector"],
-        "answer": 1
-    },
-    {
-        "question": "What year was The Division 2 released?",
-        "options": ["2017", "2018", "2019", "2020"],
-        "answer": 2
-    },
-    {
-        "question": "Which raid was added in Title Update 8?",
-        "options": ["Dark Hours", "Iron Horse", "Summit", "Countdown"],
-        "answer": 0
-    },
-    {
-        "question": "What is the name of the Division's watch?",
-        "options": ["Smart Watch", "SHD Watch", "Agent Watch", "Tactical Watch"],
-        "answer": 1
-    },
-    {
-        "question": "Which specialisation uses the Crossbow?",
-        "options": ["Demolitionist", "Survivalist", "Gunner", "Technician"],
-        "answer": 1
-    }
+    {"question": "What is the name of the AI system used by Division agents?", "options": ["ISAC", "JTF", "SHD", "BTSU"], "answer": 0},
+    {"question": "Which faction controls the White House at the start of Division 2?", "options": ["Hyenas", "Outcasts", "True Sons", "Black Tusk"], "answer": 2},
+    {"question": "What is the max Gear Score in Warlords of New York?", "options": ["450", "500", "515", "600"], "answer": 2},
+    {"question": "Which exotic SMG has the 'Obliterate' talent?", "options": ["Chatterbox", "Lady Death", "Tommy Gun", "Vector"], "answer": 1},
+    {"question": "What year was The Division 2 released?", "options": ["2017", "2018", "2019", "2020"], "answer": 2},
+    {"question": "Which raid was added in Title Update 8?", "options": ["Dark Hours", "Iron Horse", "Summit", "Countdown"], "answer": 0},
+    {"question": "What is the name of the Division's watch?", "options": ["Smart Watch", "SHD Watch", "Agent Watch", "Tactical Watch"], "answer": 1},
+    {"question": "Which specialisation uses the Crossbow?", "options": ["Demolitionist", "Survivalist", "Gunner", "Technician"], "answer": 1}
 ]
 
 # --- СИСТЕМА ОЧКОВ ВИКТОРИНЫ ---
 trivia_scores = {}
 active_trivia = None
 
-# --- СТРУКТУРА КАНАЛОВ ---
-CATEGORIES = {
-    "🏠 WELCOME & INFO": [
-        ("👋・welcome", "text"),
-        ("📜・rules", "text"),
-        ("📢・announcements", "text"),
-        ("🎁・roles", "text"),
-        ("🔗・useful-links", "text")
-    ],
-    "💬 GENERAL CHAT": [
-        ("💬・general", "text"),
-        ("🎮・gaming-chat", "text"),
-        ("📸・screenshots", "text"),
-        ("🤖・bot-commands", "text"),
-        ("💡・suggestions", "text")
-    ],
-    "🎯 THE DIVISION 2: GAME HUB": [
-        ("📰・td2-news", "text"),
-        ("⚙️・builds-theory", "text"),
-        ("🗺️・missions-help", "text"),
-        ("👾・boss-strats", "text"),
-        ("🛠️・tech-support", "text")
-    ],
-    "🔍 LFG / ACTIVITIES": [
-        ("🔍・lfg-pve", "text"),
-        ("🔥・lfg-raids", "text"),
-        ("🏆・lfg-battlepass", "text"),
-        ("🕐・scheduled-runs", "text"),
-        ("🌍・lfg-global", "text")
-    ],
-    "🔊 VOICE CHANNELS": [
-        ("🔊・Lobby", "voice"),
-        ("🔊・Squad-1", "voice"),
-        ("🔊・Squad-2", "voice"),
-        ("🔊・Raid-Command", "voice"),
-        ("🔊・AFK / Chill", "voice")
-    ],
-    "🛠️ STAFF & ADMIN": [
-        ("🔐・staff-chat", "text"),
-        ("📋・applications", "text"),
-        ("🗑️・mod-logs", "text"),
-        ("⚙️・server-setup", "text")
-    ]
-}
-
-# --- КЛАСС ДЛЯ КНОПОК ЭКЗОТИКОВ ---
+# ============================================
+# ✅ КЛАСС ДЛЯ КНОПОК ЭКЗОТИКОВ
+# ============================================
 class ExoticSelectView(View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="🎲 Random Exotic", style=discord.ButtonStyle.blurple, emoji="🎲")
+    @discord.ui.button(label="🎲 Random Exotic", style=discord.ButtonStyle.blurple, emoji="🎲", custom_id="exotic_random")
     async def random_exotic(self, interaction: discord.Interaction, button: Button):
         exotic = random.choice(EXOTICS_DB)
         embed = discord.Embed(title=f"🎲 Random Exotic: {exotic['name']}", description=f"**Type:** {exotic['type']}\n**Talent:** `{exotic['talent']}`", color=0xFFD700)
@@ -214,7 +136,7 @@ class ExoticSelectView(View):
         embed.set_footer(text="CoopFamily • Good luck farming!", icon_url="https://i.imgur.com/sAnFJ4c.png")
         await interaction.response.edit_message(embed=embed, view=ExoticSelectView())
     
-    @discord.ui.button(label="📋 All Exotics", style=discord.ButtonStyle.gray, emoji="📋")
+    @discord.ui.button(label="📋 All Exotics", style=discord.ButtonStyle.gray, emoji="📋", custom_id="exotic_all")
     async def all_exotics(self, interaction: discord.Interaction, button: Button):
         embed = discord.Embed(title="📋 All Exotics List", description="Here are all available exotic weapons and gear", color=0xFFD700)
         for i, exotic in enumerate(EXOTICS_DB, 1):
@@ -222,27 +144,60 @@ class ExoticSelectView(View):
         embed.set_footer(text="CoopFamily • Use !exotics <name> for details", icon_url="https://i.imgur.com/sAnFJ4c.png")
         await interaction.response.edit_message(embed=embed, view=ExoticSelectView())
 
-# --- КЛАСС ДЛЯ КНОПОК ВИКТОРИНЫ ---
+# ============================================
+# ✅ КЛАСС ДЛЯ КНОПОК РОЛЕЙ
+# ============================================
+class RoleSelectView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+        for role_key, role_data in SELF_ASSIGNABLE_ROLES.items():
+            emoji = role_data["emoji"]
+            style = discord.ButtonStyle.blurple if role_key in ["PC", "PlayStation", "Xbox"] else discord.ButtonStyle.green if role_key in ["Ping-Events", "Ping-LFG"] else discord.ButtonStyle.gray
+            self.add_item(RoleButton(role_key, role_data["id"], emoji, style, custom_id=f"role_{role_key}"))
+
+class RoleButton(Button):
+    def __init__(self, role_key, role_id, emoji, style, custom_id):
+        super().__init__(style=style, label=role_key, emoji=emoji, custom_id=custom_id)
+        self.role_key = role_key
+        self.role_id = role_id
+    
+    async def callback(self, interaction: discord.Interaction):
+        guild = interaction.guild
+        member = interaction.user
+        role = guild.get_role(self.role_id)
+        if not role:
+            await interaction.response.send_message("❌ Role not found!", ephemeral=True)
+            return
+        if role in member.roles:
+            await member.remove_roles(role)
+            await interaction.response.send_message(f"❌ Removed <@&{self.role_id}>!", ephemeral=True)
+        else:
+            await member.add_roles(role)
+            await interaction.response.send_message(f"✅ Added <@&{self.role_id}>!", ephemeral=True)
+
+# ============================================
+# ✅ КЛАСС ДЛЯ КНОПОК ВИКТОРИНЫ
+# ============================================
 class TriviaView(View):
-    def __init__(self, correct_answer: int, question_data: dict):
+    def __init__(self, correct_answer: int, question_ dict):
         super().__init__(timeout=30)
         self.correct_answer = correct_answer
         self.question_data = question_data
         self.answered = False
     
-    @discord.ui.button(label="A", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label="A", style=discord.ButtonStyle.blurple, custom_id="trivia_a")
     async def option_a(self, interaction: discord.Interaction, button: Button):
         await self.check_answer(interaction, 0)
     
-    @discord.ui.button(label="B", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label="B", style=discord.ButtonStyle.blurple, custom_id="trivia_b")
     async def option_b(self, interaction: discord.Interaction, button: Button):
         await self.check_answer(interaction, 1)
     
-    @discord.ui.button(label="C", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label="C", style=discord.ButtonStyle.blurple, custom_id="trivia_c")
     async def option_c(self, interaction: discord.Interaction, button: Button):
         await self.check_answer(interaction, 2)
     
-    @discord.ui.button(label="D", style=discord.ButtonStyle.blurple)
+    @discord.ui.button(label="D", style=discord.ButtonStyle.blurple, custom_id="trivia_d")
     async def option_d(self, interaction: discord.Interaction, button: Button):
         await self.check_answer(interaction, 3)
     
@@ -263,35 +218,6 @@ class TriviaView(View):
         for child in self.children:
             child.disabled = True
         await interaction.edit_original_response(view=self)
-
-# --- КЛАСС ДЛЯ КНОПОК РОЛЕЙ ---
-class RoleSelectView(View):
-    def __init__(self):
-        super().__init__(timeout=None)
-        for role_key, role_data in SELF_ASSIGNABLE_ROLES.items():
-            emoji = role_data["emoji"]
-            style = discord.ButtonStyle.blurple if role_key in ["PC", "PlayStation", "Xbox"] else discord.ButtonStyle.green if role_key in ["Ping-Events", "Ping-LFG"] else discord.ButtonStyle.gray
-            self.add_item(RoleButton(role_key, role_data["id"], emoji, style))
-
-class RoleButton(Button):
-    def __init__(self, role_key, role_id, emoji, style):
-        super().__init__(style=style, label=role_key, emoji=emoji)
-        self.role_key = role_key
-        self.role_id = role_id
-    
-    async def callback(self, interaction: discord.Interaction):
-        guild = interaction.guild
-        member = interaction.user
-        role = guild.get_role(self.role_id)
-        if not role:
-            await interaction.response.send_message("❌ Role not found!", ephemeral=True)
-            return
-        if role in member.roles:
-            await member.remove_roles(role)
-            await interaction.response.send_message(f"❌ Removed <@&{self.role_id}>!", ephemeral=True)
-        else:
-            await member.add_roles(role)
-            await interaction.response.send_message(f"✅ Added <@&{self.role_id}>!", ephemeral=True)
 
 # --- СОБЫТИЯ ---
 @bot.event
@@ -317,26 +243,17 @@ async def on_member_join(member):
 
 @bot.event
 async def on_message(message):
-    # Игнорируем сообщения бота
     if message.author.bot:
         return
-    
-    # Авто-модерация
     await auto_moderate(message)
-    
-    # Обработка команд
     await bot.process_commands(message)
 
 # --- АВТО-МОДЕРАЦИЯ ---
 async def auto_moderate(message):
-    """
-    🛡️ Auto-moderation: invites, links, caps, forbidden words
-    """
     if message.author.guild_permissions.administrator:
         return
     
     content = message.content
-    guild = message.guild
     
     # 1. Блокировка инвайтов Discord
     if "discord.gg/" in content.lower() or "discord.com/invite" in content.lower():
@@ -367,33 +284,6 @@ async def auto_moderate(message):
             return
 
 # --- КОМАНДЫ ---
-
-@bot.command(name='setup')
-@commands.has_permissions(administrator=True)
-async def setup_server(ctx):
-    guild = ctx.guild
-    await ctx.send("🚀 **Starting CoopFamily Server Setup...**")
-    created_roles = {}
-    for role_name, color in ROLE_COLORS.items():
-        try:
-            role = await guild.create_role(name=role_name, color=discord.Color(color), reason="CoopFamily Setup")
-            created_roles[role_name] = role
-        except Exception as e:
-            print(f"❌ Error creating role {role_name}: {e}")
-    await ctx.send(f"🎨 **Created {len(created_roles)} roles.**")
-    for cat_name, channels in CATEGORIES.items():
-        try:
-            category = await guild.create_category_channel(cat_name)
-            if "STAFF" in cat_name:
-                await category.set_permissions(guild.default_role, view_channel=False)
-            for ch_name, ch_type in channels:
-                if ch_type == "text":
-                    await guild.create_text_channel(ch_name, category=category)
-                elif ch_type == "voice":
-                    await guild.create_voice_channel(ch_name, category=category)
-        except Exception as e:
-            print(f"❌ Error in category {cat_name}: {e}")
-    await ctx.send("✅ **Server Setup Complete!**")
 
 @bot.command(name='welcome')
 @commands.has_permissions(manage_messages=True)
@@ -445,9 +335,6 @@ async def send_exotics(ctx, *, exotic_name: str = None):
 
 @bot.command(name='meme')
 async def send_meme(ctx):
-    """
-    🎭 Posts a random Division 2 meme.
-    """
     meme_url = random.choice(MEME_URLS)
     embed = discord.Embed(title="🎭 Random Division Meme", color=0xE91E63)
     embed.set_image(url=meme_url)
@@ -456,9 +343,6 @@ async def send_meme(ctx):
 
 @bot.command(name='compliment')
 async def send_compliment(ctx, member: discord.Member = None):
-    """
-    💝 Give a compliment to someone (or yourself!).
-    """
     if not member:
         member = ctx.author
     compliment = random.choice(COMPLIMENTS)
@@ -468,9 +352,6 @@ async def send_compliment(ctx, member: discord.Member = None):
 
 @bot.command(name='trivia')
 async def start_trivia(ctx):
-    """
-    🧠 Start a Division 2 trivia question!
-    """
     global active_trivia
     
     if active_trivia:
@@ -495,15 +376,11 @@ async def start_trivia(ctx):
     
     await ctx.send(embed=embed, view=TriviaView(question_data['answer'], question_data))
     
-    # Сброс активной викторины через 30 секунд
     await asyncio.sleep(30)
     active_trivia = None
 
 @bot.command(name='trivia-leaderboard')
 async def trivia_leaderboard(ctx):
-    """
-    🏆 Show trivia leaderboard.
-    """
     if not trivia_scores:
         await ctx.send("📊 No trivia scores yet! Start with `!trivia`")
         return
@@ -526,7 +403,7 @@ async def help_command(ctx):
     embed.add_field(name="🎮 The Division 2", value="`!exotics` — Exotic info\n`!exotics <name>` — Search exotic\n`!meme` — Random meme\n`!trivia` — Start trivia\n`!trivia-leaderboard` — Show scores", inline=False)
     embed.add_field(name="💝 Community", value="`!compliment @user` — Give compliment", inline=False)
     embed.add_field(name="🏓 Utilities", value="`!help` — Show this menu\n`!ping` — Check latency", inline=False)
-    embed.set_footer(text="CoopFamily Bot v1.7", icon_url="https://i.imgur.com/sAnFJ4c.png")
+    embed.set_footer(text="CoopFamily Bot v1.9", icon_url="https://i.imgur.com/sAnFJ4c.png")
     await ctx.send(embed=embed)
 
 @bot.command(name='ping')
@@ -537,11 +414,6 @@ async def ping_command(ctx):
     await ctx.send(embed=embed)
 
 # --- ОБРАБОТКА ОШИБОК ---
-@setup_server.error
-async def setup_error(ctx, error):
-    if isinstance(error, commands.MissingPermissions):
-        await ctx.send("❌ Administrator permissions required!")
-
 @send_welcome.error
 @send_rules.error
 @send_roles.error
@@ -550,10 +422,15 @@ async def perm_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("❌ Manage Messages permissions required!")
 
+@help_command.error
+@ping_command.error
+async def cmd_error(ctx, error):
+    await ctx.send(f"❌ Error: {error}")
+
 # --- ЗАПУСК ---
 if __name__ == "__main__":
     try:
-        print("🚀 Starting CoopFamily Bot v1.7...")
+        print("🚀 Starting CoopFamily Bot v1.9...")
         bot.run(TOKEN)
     except discord.LoginFailure:
         print("❌ Invalid token!")
