@@ -1,9 +1,10 @@
 import discord
 from discord.ext import commands
 from discord import Permissions
-from discord.ui import Button, View
+from discord.ui import Button, View, Select
 import os
 from dotenv import load_dotenv
+import random
 
 # Загрузка переменных окружения из .env файла
 load_dotenv()
@@ -62,6 +63,116 @@ ROLE_COLORS = {
     "Muted": 0x2C3E50
 }
 
+# --- БАЗА ДАННЫХ ЭКЗОТИКОВ ---
+EXOTICS_DB = [
+    {
+        "name": "Merciless & Ruthless",
+        "type": "Rifle & Pistol",
+        "talent": "The Show Must Go On",
+        "location": "Invaded District Union Arena (Control Point)",
+        "difficulty": "Heroic",
+        "image": "https://static.wikia.nocookie.net/thedivision/images/0/02/Merciless.png"
+    },
+    {
+        "name": "Chatterbox",
+        "type": "SMG",
+        "talent": "Unhinged",
+        "location": "Invaded Bank Headquarters (Mission)",
+        "difficulty": "Heroic",
+        "image": "https://static.wikia.nocookie.net/thedivision/images/9/9a/Chatterbox.png"
+    },
+    {
+        "name": "Lady Death",
+        "type": "SMG",
+        "talent": "Obliterate",
+        "location": "Invaded Tidal Basin (Stronghold)",
+        "difficulty": "Heroic",
+        "image": "https://static.wikia.nocookie.net/thedivision/images/1/1a/Lady_Death.png"
+    },
+    {
+        "name": "Pestilence",
+        "type": "Assault Rifle",
+        "talent": "Plague",
+        "location": "Invaded Capitol Building (Stronghold)",
+        "difficulty": "Heroic",
+        "image": "https://static.wikia.nocookie.net/thedivision/images/8/8a/Pestilence.png"
+    },
+    {
+        "name": "Nemesis",
+        "type": "Sniper Rifle",
+        "talent": "Perfect Unwavering",
+        "location": "Invaded Potomac Event Center (Stronghold)",
+        "difficulty": "Heroic",
+        "image": "https://static.wikia.nocookie.net/thedivision/images/5/5a/Nemesis.png"
+    },
+    {
+        "name": "Dodge City Gunslinger",
+        "type": "Holster",
+        "talent": "Fan the Hammer",
+        "location": "Invaded Manning National Zoo (Stronghold)",
+        "difficulty": "Heroic",
+        "image": "https://static.wikia.nocookie.net/thedivision/images/3/3a/Dodge_City.png"
+    },
+    {
+        "name": "Alps Summit Armament",
+        "type": "Chest",
+        "talent": "Headstrong",
+        "location": "Summit (100th Floor)",
+        "difficulty": "Legend",
+        "image": "https://static.wikia.nocookie.net/thedivision/images/2/2a/Alps_Summit.png"
+    },
+    {
+        "name": "Ongoing Directive",
+        "type": "Backpack",
+        "talent": "Perfect Recursion",
+        "location": "Warlords of New York (Campaign)",
+        "difficulty": "Normal",
+        "image": "https://static.wikia.nocookie.net/thedivision/images/4/4a/Ongoing_Directive.png"
+    },
+    {
+        "name": "Heartbreaker",
+        "type": "LMG",
+        "talent": "Perfect Sledgehammer",
+        "location": "Iron Horse Raid",
+        "difficulty": "Raid",
+        "image": "https://static.wikia.nocookie.net/thedivision/images/6/6a/Heartbreaker.png"
+    },
+    {
+        "name": "Paradox",
+        "type": "Assault Rifle",
+        "talent": "Perfect Time Dilation",
+        "location": "Manhunt Targets",
+        "difficulty": "Heroic",
+        "image": "https://static.wikia.nocookie.net/thedivision/images/7/7a/Paradox.png"
+    }
+]
+
+# --- ИНФОРМАЦИЯ О СЕЗОНЕ ---
+SEASON_INFO = {
+    "number": 12,
+    "name": "Price of Power",
+    "start_date": "December 3, 2024",
+    "end_date": "March 4, 2025",
+    "theme": "Black Tusk Operations",
+    "rewards": [
+        "🎁 Level 10: Exotic Cache",
+        "🎁 Level 20: Season Set Piece",
+        "🎁 Level 30: Weapon Skin",
+        "🎁 Level 40: Exotic Component Cache",
+        "🎁 Level 50: Exclusive Vanity"
+    ],
+    "manhunt_targets": [
+        "🎯 Theo Parnell (Tech)",
+        "🎯 B.T.S.U. Operatives",
+        "🎯 Black Tusk Commanders"
+    ],
+    "global_events": [
+        "🌟 Polarity Switch",
+        "🌟 Reanimated",
+        "🌟 Equipment Modded"
+    ]
+}
+
 # --- СТРУКТУРА КАНАЛОВ ---
 CATEGORIES = {
     "🏠 WELCOME & INFO": [
@@ -106,6 +217,41 @@ CATEGORIES = {
         ("⚙️・server-setup", "text")
     ]
 }
+
+# --- КЛАСС ДЛЯ КНОПОК ЭКЗОТИКОВ ---
+class ExoticSelectView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+    
+    @discord.ui.button(label="🎲 Random Exotic", style=discord.ButtonStyle.blurple, emoji="🎲")
+    async def random_exotic(self, interaction: discord.Interaction, button: Button):
+        exotic = random.choice(EXOTICS_DB)
+        embed = discord.Embed(
+            title=f"🎲 Random Exotic: {exotic['name']}",
+            description=f"**Type:** {exotic['type']}\n**Talent:** `{exotic['talent']}`",
+            color=0xFFD700
+        )
+        embed.add_field(name="📍 Drop Location", value=exotic['location'], inline=False)
+        embed.add_field(name="⚠️ Difficulty", value=exotic['difficulty'], inline=False)
+        embed.set_thumbnail(url=exotic['image'])
+        embed.set_footer(text="CoopFamily • Good luck farming!", icon_url="https://i.imgur.com/sAnFJ4c.png")
+        await interaction.response.edit_message(embed=embed, view=ExoticSelectView())
+    
+    @discord.ui.button(label="📋 All Exotics", style=discord.ButtonStyle.gray, emoji="📋")
+    async def all_exotics(self, interaction: discord.Interaction, button: Button):
+        embed = discord.Embed(
+            title="📋 All Exotics List",
+            description="Here are all available exotic weapons and gear in The Division 2",
+            color=0xFFD700
+        )
+        for i, exotic in enumerate(EXOTICS_DB, 1):
+            embed.add_field(
+                name=f"{i}. {exotic['name']}",
+                value=f"**Type:** {exotic['type']}\n**Location:** {exotic['location']}",
+                inline=False
+            )
+        embed.set_footer(text="CoopFamily • Use !exotics <name> for details", icon_url="https://i.imgur.com/sAnFJ4c.png")
+        await interaction.response.edit_message(embed=embed, view=ExoticSelectView())
 
 # --- КЛАСС ДЛЯ КНОПОК РОЛЕЙ ---
 class RoleSelectView(View):
@@ -155,6 +301,7 @@ async def on_ready():
     print(f'🔗 Server ID: {bot.guilds[0].id if bot.guilds else "N/A"}')
     await bot.change_presence(activity=discord.Game(name="The Division 2 | !help"))
     bot.add_view(RoleSelectView())
+    bot.add_view(ExoticSelectView())
 
 @bot.event
 async def on_member_join(member):
@@ -245,65 +392,43 @@ async def send_welcome(ctx):
 @bot.command(name='rules')
 @commands.has_permissions(manage_messages=True)
 async def send_rules(ctx):
-    """
-    📜 Sends beautiful rules embed for the clan.
-    """
     embed = discord.Embed(
         title="📜 CoopFamily Server Rules",
         description='"With great power comes great responsibility" — Follow these rules to keep our community safe and fun!',
-        color=0xFF6B35  # SHD Orange
+        color=0xFF6B35
     )
     
-    # 🛡️ General Rules
     embed.add_field(
         name="🛡️ General Conduct",
         value="1️⃣ **Be Respectful** — No harassment, hate speech, or discrimination\n"
               "2️⃣ **No Toxicity** — We're here to have fun, not to argue\n"
-              "3️⃣ **English Only** in public channels (use DMs for other languages)\n"
+              "3️⃣ **English Only** in public channels\n"
               "4️⃣ **No Spam** — Avoid excessive pings, caps, or repeated messages\n"
               "5️⃣ **No NSFW Content** — Keep it family-friendly",
         inline=False
     )
     
-    # 🎮 Game-Specific Rules
     embed.add_field(
         name="🎮 Division 2 Rules",
-        value="6️⃣ **PvE Focus** — This is a PvE community; keep PvP discussions minimal\n"
+        value="6️⃣ **PvE Focus** — This is a PvE community\n"
               "7️⃣ **No Cheating/Glitching** — Report bugs, don't exploit them\n"
               "8️⃣ **Share Loot Fairly** — Be generous with group drops\n"
-              "9️⃣ **Communicate in Voice** — Mic required for raids and coordinated runs\n"
+              "9️⃣ **Communicate in Voice** — Mic required for raids\n"
               "🔟 **Help New Agents** — We all started somewhere!",
         inline=False
     )
     
-    # 🔊 Voice & LFG Rules
-    embed.add_field(
-        name="🔊 Voice & LFG Etiquette",
-        value="• Use appropriate voice channels for your activity\n"
-              "• Keep raid channels clear for tactical comms only\n"
-              "• In LFG posts, specify: `[Platform] [Activity] [Requirements]`\n"
-              "• Don't leave groups mid-mission without notice\n"
-              "• Respect the Raid Leader's calls during operations",
-        inline=False
-    )
-    
-    # ⚠️ Consequences
     embed.add_field(
         name="⚠️ Rule Violations",
         value="🟡 **Warning** — Minor first-time offenses\n"
-              "🟠 **Mute** — Repeated disruptions or minor toxicity\n"
-              "🔴 **Kick/Ban** — Severe violations, cheating, or harassment\n\n"
-              "*All decisions are made by @Officer+ staff. Appeals via ticket.*",
+              "🟠 **Mute** — Repeated disruptions\n"
+              "🔴 **Kick/Ban** — Severe violations\n\n"
+              "*All decisions by @Officer+ staff*",
         inline=False
     )
     
-    # ✅ Footer with image
-    embed.set_footer(
-        text="CoopFamily • By joining, you agree to these rules",
-        icon_url="https://i.imgur.com/sAnFJ4c.png"
-    )
+    embed.set_footer(text="CoopFamily • By joining, you agree to these rules", icon_url="https://i.imgur.com/sAnFJ4c.png")
     embed.timestamp = discord.utils.utcnow()
-    
     await ctx.send(embed=embed)
 
 @bot.command(name='roles')
@@ -344,6 +469,104 @@ async def send_roles(ctx):
     
     await ctx.send(embed=embed, view=RoleSelectView())
 
+@bot.command(name='exotics')
+@commands.has_permissions(manage_messages=True)
+async def send_exotics(ctx, *, exotic_name: str = None):
+    """
+    🎯 Shows exotic weapons/gear info. Use !exotics <name> for specific item.
+    """
+    if exotic_name:
+        # Поиск конкретного экзотика
+        found = None
+        for exotic in EXOTICS_DB:
+            if exotic_name.lower() in exotic['name'].lower():
+                found = exotic
+                break
+        
+        if found:
+            embed = discord.Embed(
+                title=f"🎯 Exotic: {found['name']}",
+                description=f"**Type:** {found['type']}\n**Talent:** `{found['talent']}`",
+                color=0xFFD700
+            )
+            embed.add_field(name="📍 Drop Location", value=found['location'], inline=False)
+            embed.add_field(name="⚠️ Difficulty", value=found['difficulty'], inline=False)
+            embed.set_thumbnail(url=found['image'])
+            embed.set_footer(text="CoopFamily • Good luck farming!", icon_url="https://i.imgur.com/sAnFJ4c.png")
+            embed.timestamp = discord.utils.utcnow()
+            await ctx.send(embed=embed, view=ExoticSelectView())
+        else:
+            await ctx.send(f"❌ Exotic **{exotic_name}** not found! Use `!exotics` to see all.")
+    else:
+        # Показать все экзотики с кнопками
+        embed = discord.Embed(
+            title="🎯 Exotic Weapons & Gear",
+            description="Click buttons below for random exotic or full list!\n\n**Featured Exotics:**",
+            color=0xFFD700
+        )
+        
+        # Показать 5 случайных экзотиков
+        featured = random.sample(EXOTICS_DB, min(5, len(EXOTICS_DB)))
+        for i, exotic in enumerate(featured, 1):
+            embed.add_field(
+                name=f"{i}. {exotic['name']}",
+                value=f"**Type:** {exotic['type']}\n**Location:** {exotic['location'][:50]}...",
+                inline=False
+            )
+        
+        embed.set_footer(text="CoopFamily • Use !exotics <name> for details", icon_url="https://i.imgur.com/sAnFJ4c.png")
+        embed.timestamp = discord.utils.utcnow()
+        
+        await ctx.send(embed=embed, view=ExoticSelectView())
+
+@bot.command(name='season')
+@commands.has_permissions(manage_messages=True)
+async def send_season(ctx):
+    """
+    📅 Shows current season information.
+    """
+    # Расчет дней до конца сезона
+    from datetime import datetime
+    end_date = datetime.strptime(SEASON_INFO['end_date'], "%B %d, %Y")
+    days_left = (end_date - datetime.now()).days
+    
+    embed = discord.Embed(
+        title=f"📅 Season {SEASON_INFO['number']}: {SEASON_INFO['name']}",
+        description=f'**Theme:** {SEASON_INFO["theme"]}\n**Started:** {SEASON_INFO["start_date"]}\n**Ends:** {SEASON_INFO["end_date"]}\n**⏰ Days Left:** {days_left} days',
+        color=0xFF6B35
+    )
+    
+    # Награды сезона
+    rewards_value = ""
+    for reward in SEASON_INFO['rewards']:
+        rewards_value += f"{reward}\n"
+    embed.add_field(name="🎁 Season Rewards", value=rewards_value, inline=False)
+    
+    # Цели охоты
+    manhunt_value = ""
+    for target in SEASON_INFO['manhunt_targets']:
+        manhunt_value += f"{target}\n"
+    embed.add_field(name="🎯 Manhunt Targets", value=manhunt_value, inline=False)
+    
+    # Глобальные события
+    events_value = ""
+    for event in SEASON_INFO['global_events']:
+        events_value += f"{event}\n"
+    embed.add_field(name="🌟 Global Events", value=events_value, inline=False)
+    
+    # Прогресс БП (заглушка - можно обновлять вручную)
+    embed.add_field(
+        name="🏆 Battle Pass Progress",
+        value="`!bp <level>` — Check your BP level rewards\n\n*Update manually with new season info*",
+        inline=False
+    )
+    
+    embed.set_thumbnail(url="https://i.imgur.com/sAnFJ4c.png")
+    embed.set_footer(text="CoopFamily • Season info may vary", icon_url="https://i.imgur.com/sAnFJ4c.png")
+    embed.timestamp = discord.utils.utcnow()
+    
+    await ctx.send(embed=embed)
+
 @bot.command(name='help')
 @commands.has_permissions(manage_messages=True)
 async def help_command(ctx):
@@ -358,8 +581,12 @@ async def help_command(ctx):
         value="`!welcome` — Send welcome message\n`!rules` — Send server rules\n`!roles` — Send role panel\n`!help` — Show this menu",
         inline=False
     )
-    embed.add_field(name="🏓 Utilities", value="`!ping` — Check bot latency", inline=False)
-    embed.set_footer(text="CoopFamily Bot v1.3", icon_url="https://i.imgur.com/sAnFJ4c.png")
+    embed.add_field(
+        name="🎮 Division 2",
+        value="`!exotics` — Exotic weapons info\n`!season` — Current season info\n`!ping` — Check bot latency",
+        inline=False
+    )
+    embed.set_footer(text="CoopFamily Bot v1.4", icon_url="https://i.imgur.com/sAnFJ4c.png")
     await ctx.send(embed=embed)
 
 @bot.command(name='ping')
@@ -380,6 +607,8 @@ async def setup_error(ctx, error):
 @send_welcome.error
 @send_rules.error
 @send_roles.error
+@send_exotics.error
+@send_season.error
 async def perm_error(ctx, error):
     if isinstance(error, commands.MissingPermissions):
         await ctx.send("❌ You need **Manage Messages** permissions!")
@@ -389,7 +618,7 @@ async def perm_error(ctx, error):
 # --- ЗАПУСК ---
 if __name__ == "__main__":
     try:
-        print("🚀 Starting CoopFamily Bot v1.3...")
+        print("🚀 Starting CoopFamily Bot v1.4...")
         bot.run(TOKEN)
     except discord.LoginFailure:
         print("❌ Invalid token! Check DISCORD_TOKEN.")
