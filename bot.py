@@ -229,10 +229,10 @@ class RoleButton(Button):
                 await interaction.response.send_message(f"✅ Added <@&{self.role_id}>!", ephemeral=True)
 
 # ============================================
-# ✅ КЛАСС ДЛЯ КНОПОК ВИКТОРИНЫ
+# ✅ КЛАСС ДЛЯ КНОПОК ВИКТОРИНЫ (ИСПРАВЛЕНО)
 # ============================================
 class TriviaView(View):
-    def __init__(self, correct_answer: int, question_ dict, lang: str):
+    def __init__(self, correct_answer: int, question_data: dict, lang: str):  # ✅ Исправлено: question_data: dict
         super().__init__(timeout=30)
         self.correct_answer = correct_answer
         self.question_data = question_data
@@ -347,8 +347,6 @@ async def auto_moderate(message):
 @bot.command(name='welcome')
 @commands.has_permissions(manage_messages=True)
 async def send_welcome(ctx):
-    lang = await get_user_language(ctx.author)
-    
     # Английский эмбед
     embed_en = discord.Embed(title="🧡 Welcome to CoopFamily", description='"United We Stand, Divided We Fall" — Our motto in Washington.', color=0xFF6B35)
     embed_en.add_field(name="🎯 What to Expect?", value="• 🤝 Friendly PvE Community\n• 🔍 24/7 LFG for Missions & Farming\n• 📚 Guides, Builds & Newbie Help\n• 🏆 Joint Battlepass & Exotic Farming\n• 🎙️ Active Voice Chats", inline=False)
@@ -359,20 +357,17 @@ async def send_welcome(ctx):
     await ctx.send(embed=embed_en)
     
     # Русский эмбед (отдельным сообщением)
-    if lang == "ru" or True:  # Всегда показывать русский вариант
-        embed_ru = discord.Embed(title="🧡 Добро пожаловать в CoopFamily", description='"Вместе мы сильны, по отдельности мы падаем" — Наш девиз в Вашингтоне.', color=0xFF6B35)
-        embed_ru.add_field(name="🎯 Что вас ждёт?", value="• 🤝 Дружелюбное PvE-комьюнити\n• 🔍 Поиск группы 24/7 для миссий и фарма\n• 📚 Гайды, билды и помощь новичкам\n• 🏆 Совместный фарм Battle Pass и экзотики\n• 🎙️ Активные голосовые чаты", inline=False)
-        embed_ru.add_field(name="📋 Первые шаги:", value=f"1️⃣ Прочти правила в <#{CHANNEL_IDS['rules']}>\n2️⃣ Выбери платформу в <#{CHANNEL_IDS['roles']}>\n3️⃣ Представься в <#{CHANNEL_IDS['general']}>\n4️⃣ Найди группу в <#{CHANNEL_IDS['lfg-pve']}>", inline=False)
-        embed_ru.set_footer(text="CoopFamily • Сеть SHD активна", icon_url="https://i.imgur.com/sAnFJ4c.png")
-        embed_ru.timestamp = discord.utils.utcnow()
-        
-        await ctx.send(embed=embed_ru)
+    embed_ru = discord.Embed(title="🧡 Добро пожаловать в CoopFamily", description='"Вместе мы сильны, по отдельности мы падаем" — Наш девиз в Вашингтоне.', color=0xFF6B35)
+    embed_ru.add_field(name="🎯 Что вас ждёт?", value="• 🤝 Дружелюбное PvE-комьюнити\n• 🔍 Поиск группы 24/7 для миссий и фарма\n• 📚 Гайды, билды и помощь новичкам\n• 🏆 Совместный фарм Battle Pass и экзотики\n• 🎙️ Активные голосовые чаты", inline=False)
+    embed_ru.add_field(name="📋 Первые шаги:", value=f"1️⃣ Прочти правила в <#{CHANNEL_IDS['rules']}>\n2️⃣ Выбери платформу в <#{CHANNEL_IDS['roles']}>\n3️⃣ Представься в <#{CHANNEL_IDS['general']}>\n4️⃣ Найди группу в <#{CHANNEL_IDS['lfg-pve']}>", inline=False)
+    embed_ru.set_footer(text="CoopFamily • Сеть SHD активна", icon_url="https://i.imgur.com/sAnFJ4c.png")
+    embed_ru.timestamp = discord.utils.utcnow()
+    
+    await ctx.send(embed=embed_ru)
 
 @bot.command(name='rules')
 @commands.has_permissions(manage_messages=True)
 async def send_rules(ctx):
-    lang = await get_user_language(ctx.author)
-    
     # Английский эмбед
     embed_en = discord.Embed(title="📜 CoopFamily Server Rules", description='"With great power comes great responsibility"', color=0xFF6B35)
     embed_en.add_field(name="🛡️ General Conduct", value="1️⃣ **Be Respectful**\n2️⃣ **No Toxicity**\n3️⃣ **English Only** in public channels\n4️⃣ **No Spam**\n5️⃣ **No NSFW**", inline=False)
@@ -383,14 +378,13 @@ async def send_rules(ctx):
     await ctx.send(embed=embed_en)
     
     # Русский эмбед (отдельным сообщением)
-    if lang == "ru" or True:  # Всегда показывать русский вариант
-        embed_ru = discord.Embed(title="📜 Правила сервера CoopFamily", description='"С большой силой приходит большая ответственность"', color=0xFF6B35)
-        embed_ru.add_field(name="🛡️ Общие правила", value="1️⃣ **Уважайте других**\n2️⃣ **Нет токсичности**\n3️⃣ **Английский** в публичных каналах\n4️⃣ **Нет спаму**\n5️⃣ **Нет NSFW**", inline=False)
-        embed_ru.add_field(name="🎮 Правила Division 2", value="6️⃣ **Фокус на PvE**\n7️⃣ **Нет читам**\n8️⃣ **Делитесь лутом**\n9️⃣ **Микрофон для рейдов**\n🔟 **Помогайте новичкам**", inline=False)
-        embed_ru.add_field(name="⚠️ Нарушения", value="🟡 **Предупреждение** — Малые нарушения\n🟠 **Мут** — Повторные нарушения\n🔴 **Кик/Бан** — Серьёзные нарушения", inline=False)
-        embed_ru.set_footer(text="CoopFamily • Присоединяясь, вы соглашаетесь", icon_url="https://i.imgur.com/sAnFJ4c.png")
-        
-        await ctx.send(embed=embed_ru)
+    embed_ru = discord.Embed(title="📜 Правила сервера CoopFamily", description='"С большой силой приходит большая ответственность"', color=0xFF6B35)
+    embed_ru.add_field(name="🛡️ Общие правила", value="1️⃣ **Уважайте других**\n2️⃣ **Нет токсичности**\n3️⃣ **Английский** в публичных каналах\n4️⃣ **Нет спаму**\n5️⃣ **Нет NSFW**", inline=False)
+    embed_ru.add_field(name="🎮 Правила Division 2", value="6️⃣ **Фокус на PvE**\n7️⃣ **Нет читам**\n8️⃣ **Делитесь лутом**\n9️⃣ **Микрофон для рейдов**\n🔟 **Помогайте новичкам**", inline=False)
+    embed_ru.add_field(name="⚠️ Нарушения", value="🟡 **Предупреждение** — Малые нарушения\n🟠 **Мут** — Повторные нарушения\n🔴 **Кик/Бан** — Серьёзные нарушения", inline=False)
+    embed_ru.set_footer(text="CoopFamily • Присоединяясь, вы соглашаетесь", icon_url="https://i.imgur.com/sAnFJ4c.png")
+    
+    await ctx.send(embed=embed_ru)
 
 @bot.command(name='roles')
 @commands.has_permissions(manage_messages=True)
